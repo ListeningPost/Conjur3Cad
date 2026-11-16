@@ -1,0 +1,37 @@
+# Local Redis for the Conjur3 app (server-side caching + rate limiting).
+#   docker compose up -d redis redis-commander
+#
+# - redis            : the cache/limiter store, persisted to a named volume.
+# - redis-commander  : web UI at http://localhost:8081 to inspect/manage keys.
+#
+# Production: point REDIS_URL at a managed instance (Upstash / GCP Memorystore)
+# instead of running this. See SETUP.md.
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: conjur3-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: conjur3-redis-ui
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  redis-data:

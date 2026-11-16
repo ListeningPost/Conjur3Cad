@@ -1,0 +1,76 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies / build output (any workspace)
+node_modules/
+/.pnp
+.pnp.js
+functions/lib/
+mcp-gateway/dist/
+connector/dist/
+dist/
+
+# python (imported conjur3/ subtree etc.)
+**/__pycache__/
+**/*.py[cod]
+**/.venv/
+*.egg-info/
+.pytest_cache/
+
+# conjur3 vendored MCP source for deploy images
+deploy/mcp/conjur3-pilot/
+deploy/freecad/conjur3-pilot/
+
+# firebase
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+.runtimeconfig.json
+
+# playwright + local captures
+/.playwright-mcp/
+conjur3-*.jpeg
+conjur3/.playwright-mcp/
+conjur3/out/
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+.env.production
+.env.development
+
+# firebase functions per-project runtime env (.env.<projectId>) — may hold secrets, never commit
+functions/.env.*
+!functions/.env.*.example
+
+# internal business docs never belong in this repository
+docs/Conjur3-*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+.env
+.dev-logs/
+mcp-gateway/public/*
+!mcp-gateway/public/.gitkeep

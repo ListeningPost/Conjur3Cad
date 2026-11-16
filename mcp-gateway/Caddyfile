@@ -1,0 +1,9 @@
+# TLS-terminating reverse proxy for the MCP gateway on your GCP VM.
+# Caddy auto-provisions a Let's Encrypt cert. `flush_interval -1` is required
+# so MCP's SSE streams are flushed to the client immediately (no buffering).
+mcp.conjur3.com {
+	reverse_proxy localhost:8080 {
+		flush_interval -1
+		header_up X-Forwarded-For {remote_host}
+	}
+}

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 358" width="900" height="358" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-labelledby="t2 d2">
+<title id="t2">CADGenBench score: Conjur3 against reference points</title>
+<desc id="d2">Leaderboard leader, 16 Nov 2026: 0.866; Conjur3 + Claude Fable 5.2 (this run): 0.595; Best entry before 7 Aug 2026: 0.532; Best entry on 25 Jun 2026 (Hugging Face baseline): 0.451; Median of all 1,000 other submissions: 0.114</desc>
+<rect width="900" height="358" rx="12" fill="#fcfcfb"/>
+<text x="28" y="34" font-size="18" font-weight="700" fill="#0b0b0b">Where 0.595 sits</text>
+<text x="28" y="58" font-size="13" fill="#52514e">CAD Score, 0 to 1. Leaderboard snapshot 2026-11-16.</text>
+<line x1="330.0" x2="330.0" y1="76" y2="314" stroke="#e4e3df" stroke-width="1"/>
+<text x="330.0" y="332" font-size="11.5" text-anchor="middle" fill="#6f6e69">0</text>
+<line x1="455.0" x2="455.0" y1="76" y2="314" stroke="#e4e3df" stroke-width="1"/>
+<text x="455.0" y="332" font-size="11.5" text-anchor="middle" fill="#6f6e69">0.25</text>
+<line x1="580.0" x2="580.0" y1="76" y2="314" stroke="#e4e3df" stroke-width="1"/>
+<text x="580.0" y="332" font-size="11.5" text-anchor="middle" fill="#6f6e69">0.5</text>
+<line x1="705.0" x2="705.0" y1="76" y2="314" stroke="#e4e3df" stroke-width="1"/>
+<text x="705.0" y="332" font-size="11.5" text-anchor="middle" fill="#6f6e69">0.75</text>
+<line x1="830.0" x2="830.0" y1="76" y2="314" stroke="#e4e3df" stroke-width="1"/>
+<text x="830.0" y="332" font-size="11.5" text-anchor="middle" fill="#6f6e69">1</text>
+<text x="316" y="111.0" font-size="13" text-anchor="end" font-weight="400" fill="#52514e">Leaderboard leader, 16 Nov 2026</text>
+<path d="M330,96.0 h429.1 a4,4 0 0 1 4,4 v14 a4,4 0 0 1 -4,4 h-429.1 z" fill="#2a78d6"/>
+<text x="771.1" y="111.0" font-size="13" font-weight="400" fill="#0b0b0b">0.866</text>
+<text x="316" y="157.0" font-size="13" text-anchor="end" font-weight="700" fill="#0b0b0b">Conjur3 + Claude Fable 5.2 (this run)</text>
+<path d="M330,142.0 h293.3 a4,4 0 0 1 4,4 v14 a4,4 0 0 1 -4,4 h-293.3 z" fill="#eb6834"/>
+<text x="635.3" y="157.0" font-size="13" font-weight="700" fill="#0b0b0b">0.595</text>
+<text x="316" y="203.0" font-size="13" text-anchor="end" font-weight="400" fill="#52514e">Best entry before 7 Aug 2026</text>
+<path d="M330,188.0 h262.0 a4,4 0 0 1 4,4 v14 a4,4 0 0 1 -4,4 h-262.0 z" fill="#2a78d6"/>
+<text x="604.0" y="203.0" font-size="13" font-weight="400" fill="#0b0b0b">0.532</text>
+<text x="316" y="249.0" font-size="13" text-anchor="end" font-weight="400" fill="#52514e">Best entry on 25 Jun 2026 (Hugging Face baseline)</text>
+<path d="M330,234.0 h221.7 a4,4 0 0 1 4,4 v14 a4,4 0 0 1 -4,4 h-221.7 z" fill="#2a78d6"/>
+<text x="563.7" y="249.0" font-size="13" font-weight="400" fill="#0b0b0b">0.451</text>
+<text x="316" y="295.0" font-size="13" text-anchor="end" font-weight="400" fill="#52514e">Median of all 1,000 other submissions</text>
+<path d="M330,280.0 h53.2 a4,4 0 0 1 4,4 v14 a4,4 0 0 1 -4,4 h-53.2 z" fill="#2a78d6"/>
+<text x="395.2" y="295.0" font-size="13" font-weight="400" fill="#0b0b0b">0.114</text>
+</svg>

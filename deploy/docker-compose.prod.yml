@@ -1,0 +1,80 @@
+# Conjur3 MCP production stack for a single GCP Compute Engine VM.
+#
+#   cd deploy && cp .env.prod.example .env && $EDITOR .env
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Topology (relay model — no FreeCAD on the server):
+#   Caddy (TLS) ─▶ gateway (auth + single-session + relay) ─▶ mcp (conjur3-pilot)
+#   gateway's relay ◀──wss── the customer's connector ──▶ their local FreeCAD
+# Redis holds sessions. FreeCAD runs on the customer's machine, never here.
+#
+# Credentials: on a GCP VM with an attached service account, firebase-admin
+# picks up Application Default Credentials from the metadata server *inside the
+# container* automatically — no key file. Grant the SA: Datastore User +
+# Firebase Authentication Viewer.
+name: conjur3-mcp
+
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [gateway]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  gateway:
+    build:
+      context: ../mcp-gateway
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      REDIS_URL: redis://redis:6379
+      UPSTREAM_MCP_URL: http://mcp:8765/mcp
+      RELAY_RPC_PORT: "9000"
+      RELAY_RPC_HOST: "0.0.0.0"   # reachable by the mcp container as gateway:9000
+      CORS_ORIGIN: "*"            # lock to e.g. https://claude.ai for production
+      # FIREBASE_PROJECT_ID comes from .env. Do NOT set FIRESTORE_EMULATOR_HOST.
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # The hosted conjur3-pilot MCP (the IP). Pure Python, no FreeCAD — it reaches
+  # each customer's local FreeCAD over the gateway relay (RPC → gateway:9000).
+  mcp:
+    build:
+      context: ./mcp
+    restart: unless-stopped
+    expose: ["8765"]
+    depends_on: [gateway]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://localhost:8765/mcp || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  caddy_data: {}
+  caddy_config: {}
+  redis_data: {}

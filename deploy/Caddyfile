@@ -1,0 +1,16 @@
+# Production TLS termination for the hosted MCP. Caddy auto-provisions a
+# Let's Encrypt cert for the domain. `flush_interval -1` is REQUIRED so MCP's
+# SSE streams reach the client without buffering.
+#
+# Point an A record for mcp.conjur3.com at this VM's external IP, then
+# `docker compose up -d`. Replace the domain + email below.
+{
+	email ops@conjur3.com
+}
+
+mcp.conjur3.com {
+	reverse_proxy gateway:8080 {
+		flush_interval -1
+		header_up X-Forwarded-For {remote_host}
+	}
+}

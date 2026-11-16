@@ -1,0 +1,72 @@
+# Autoscaling Cloud Run deploy of the hosted MCP, in your Firebase/GCP project.
+# Multi-container: the gateway (ingress + Redis-backed validation middleware)
+# with the conjur3-pilot MCP as a sidecar — they share localhost, so the MCP's
+# FreeCAD RPC reaches the gateway's relay on 127.0.0.1:9000.
+#
+#   gcloud run services replace deploy/cloudrun/service.yaml --region=us-central1
+#
+# Front it with a Firebase Hosting rewrite (firebase.json) or a custom domain so
+# customers hit https://mcp.conjur3.com/mcp.
+#
+# The relay is Redis-decoupled (RPC routed by seat over pub/sub), so the
+# connector tunnel survives autoscaling — any instance reaches any connector.
+# maxScale>1 is therefore safe. Requires a SHARED Redis (Memorystore/Upstash),
+# not per-instance, so the pub/sub backbone is common to the fleet.
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: conjur3-mcp
+  labels:
+    cloud.googleapis.com/location: us-central1
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"    # warm; scale-to-zero = "0"
+        autoscaling.knative.dev/maxScale: "10"   # safe: relay is Redis-decoupled
+        run.googleapis.com/sessionAffinity: "true"
+        run.googleapis.com/cpu-throttling: "false"
+        # Reach Memorystore (private IP) over the Serverless VPC connector.
+        run.googleapis.com/vpc-access-connector: "projects/__PROJECT_ID__/locations/__REGION__/connectors/conjur3-conn"
+        run.googleapis.com/vpc-access-egress: "private-ranges-only"
+    spec:
+      timeoutSeconds: 3600          # long-lived MCP/SSE + connector ws
+      containerConcurrency: 80
+      containers:
+        - name: gateway
+          image: __REGION__-docker.pkg.dev/__PROJECT_ID__/conjur3/gateway:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - { name: NODE_ENV, value: "production" }
+            # PORT is injected by Cloud Run automatically (reserved); do not set it.
+            - { name: UPSTREAM_MCP_URL, value: "http://localhost:8765/mcp" }
+            - { name: RELAY_RPC_HOST, value: "127.0.0.1" }
+            - { name: RELAY_RPC_PORT, value: "9000" }
+            - { name: FIREBASE_PROJECT_ID, value: "__PROJECT_ID__" }
+            - { name: SINGLE_SESSION, value: "false" }
+            - { name: CORS_ORIGIN, value: "*" }   # lock to https://claude.ai for prod
+            # Redis reachable from Cloud Run without a VPC connector → Upstash
+            # (rediss://). For Memorystore, add a Serverless VPC connector.
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef: { name: conjur3-redis-url, key: latest }
+            # ---- Self-hosted observability over the tailnet (optional) ------
+            # Create both secrets and uncomment to ship audit events to the
+            # on-prem box (see deploy/onprem-observability/README.md). With
+            # TS_AUTHKEY set the container joins the tailnet at boot and the
+            # OTLP endpoint is the box's MagicDNS name — nothing public.
+            # - name: TS_AUTHKEY            # ephemeral+reusable, tag:conjur3-gw
+            #   valueFrom:
+            #     secretKeyRef: { name: conjur3-tailscale-authkey, key: latest }
+            # - { name: TS_HOSTNAME, value: "conjur3-gateway" }
+            # - { name: TELEMETRY_URL, value: "http://obsbox.YOUR-TAILNET.ts.net:4318" }
+          resources:
+            limits: { cpu: "1", memory: 512Mi }
+        - name: mcp
+          image: __REGION__-docker.pkg.dev/__PROJECT_ID__/conjur3/mcp:latest
+          # conjur3-pilot → relay on the gateway sidecar (shared localhost).
+          command: ["conjur3-pilot"]
+          args: ["--http","--http-host","127.0.0.1","--http-port","8765","--host","127.0.0.1","--port","9000"]
+          resources:
+            limits: { cpu: "1", memory: 512Mi }

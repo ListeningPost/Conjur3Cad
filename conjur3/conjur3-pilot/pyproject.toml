@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "conjur3-pilot"
+version = "0.1.0"
+description = "Live parametric CAD piloting. MCP server that drives a running FreeCAD GUI via an in-process RPC bridge, with screenshot-after-every-edit feedback."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Conjur3 contributors" }]
+dependencies = [
+    "mcp[cli]>=1.12.2,<2",
+]
+
+[project.urls]
+Repository = "https://github.com/ListeningPost/Conjur3Cad"
+
+[project.scripts]
+conjur3-pilot = "conjur3_pilot.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/conjur3_pilot"]

@@ -1,0 +1,11 @@
+name: conjur3-models
+version: 0.1.0
+description: "Visual 3D-model picker for FreeCAD imports. Searches Printables (STL, GraphQL) and TraceParts (STEP, HTML scrape), surfaces candidates in a thumbnail carousel via the Hermes WebUI, and (for sources that allow it) auto-downloads the picked file ready for import_3d_file. Built for Conjur3."
+author: Conjur3
+kind: standalone
+platforms:
+  - linux
+  - macos
+provides_tools:
+  - search_3d_models
+  - pick_3d_model

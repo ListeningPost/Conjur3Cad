@@ -1,0 +1,137 @@
+# Conjur3 — FreeCAD GUI + conjur3-pilot MCP in one remote-viewable container.
+#
+# Bring it up:
+#
+#     docker compose up --build
+#
+# Open these URLs after startup:
+#   http://localhost:6080  — FreeCAD live viewport (noVNC)
+#   http://localhost:6081  — Pilot UI (simple Anthropic proxy, split-pane)
+#   http://localhost:8787  — Hermes WebUI (full agent with persistent context)
+#
+# For dev tunneling (Anthropic API needs a public HTTPS URL for pilot-ui):
+#
+#     CONJUR3_DEV_TUNNEL=1 docker compose up
+#
+# Hermes Agent connects directly to conjur3:8765/mcp over the internal
+# Docker network — no tunnel needed for Hermes.
+#
+services:
+  conjur3:
+    build:
+      context: .
+      args:
+        FASTENERS_WB_REF: ${FASTENERS_WB_REF:-master}
+        CLOUDFLARED_VER: ${CLOUDFLARED_VER:-2024.10.0}
+    image: conjur3:latest
+    container_name: conjur3
+    ports:
+      - "6080:6080"      # noVNC (FreeCAD viewport)
+      - "8765:8765"      # conjur3-pilot MCP (streamable-http)
+    volumes:
+      - ./out:/opt/conjur3/out
+    environment:
+      # Auth — set these to lock the public surfaces down.
+      VNC_PASSWORD: ${VNC_PASSWORD:-}
+      MCP_AUTH_TOKEN: ${MCP_AUTH_TOKEN:-}
+      # Set to 1 to spin up a cloudflared quick-tunnel for the MCP port.
+      CONJUR3_DEV_TUNNEL: ${CONJUR3_DEV_TUNNEL:-0}
+      # Display geometry — override if you want a bigger viewport.
+      SCREEN_GEOMETRY: ${SCREEN_GEOMETRY:-1440x900x24}
+    shm_size: 512m       # FreeCAD's OpenGL context likes a bigger /dev/shm
+    restart: unless-stopped
+
+  pilot-ui:
+    image: python:3.12-slim
+    container_name: conjur3-pilot-ui
+    working_dir: /app
+    volumes:
+      - ./conjur3-pilot/ui:/app
+      - ./out:/opt/conjur3/out
+    ports:
+      - "6081:6081"      # Pilot UI (split-pane web interface)
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      MCP_URL: ${MCP_URL:-http://conjur3:8765/mcp}
+      MCP_AUTH_TOKEN: ${MCP_AUTH_TOKEN:-}
+      UI_HOST: 0.0.0.0
+      UI_PORT: 6081
+      HERMES_BACKEND_URL: http://hermes-webui:8787
+    command: >
+      sh -c "pip install -q fastapi uvicorn httpx &&
+             python3 app.py"
+    depends_on:
+      - conjur3
+      - hermes-webui
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Hermes Agent — runs the agent gateway and populates the shared hermes-home
+  # and hermes-agent-src volumes. The WebUI installs its Python deps from the
+  # agent source volume at startup.
+  #
+  # License: MIT — see THIRD_PARTY_LICENSES.md
+  # ---------------------------------------------------------------------------
+  hermes-agent:
+    image: nousresearch/hermes-agent:latest
+    container_name: conjur3-hermes-agent
+    # Our init.sh writes MCP config + API key into the shared volume, then
+    # execs the official entrypoint (/opt/hermes/docker/entrypoint.sh).
+    entrypoint: ["/usr/bin/tini", "-g", "--", "/hermes-config/init.sh"]
+    command: ["gateway", "run"]
+    ports:
+      - "127.0.0.1:8642:8642"   # Hermes gateway (localhost only)
+    volumes:
+      - hermes-home:/home/hermes/.hermes          # persistent agent state
+      - hermes-agent-src:/opt/hermes              # agent source (shared w/ webui)
+      - ./hermes-config:/hermes-config:ro         # our init wrapper + any overrides
+      - ./out:/opt/conjur3/out:ro                 # tunnel URL file (if active)
+    environment:
+      HERMES_HOME: /home/hermes/.hermes
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      MCP_URL: ${MCP_URL:-http://conjur3:8765/mcp}
+      MCP_AUTH_TOKEN: ${MCP_AUTH_TOKEN:-}
+      # Align container UID/GID with host so shared volumes have correct ownership.
+      # Run `id -u && id -g` and set these in .env if you see permission errors.
+      HERMES_UID: ${UID:-1000}
+      HERMES_GID: ${GID:-1000}
+    depends_on:
+      - conjur3
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Hermes WebUI — lightweight web interface for Hermes Agent.
+  # Shares hermes-home (config, sessions) and hermes-agent-src (installs deps).
+  # Open http://localhost:8787 to use it.
+  #
+  # License: MIT — see THIRD_PARTY_LICENSES.md
+  # ---------------------------------------------------------------------------
+  hermes-webui:
+    image: ghcr.io/nesquena/hermes-webui:latest
+    container_name: conjur3-hermes-webui
+    # Wrapper installs hermes-agent (base only, no [all]) before handing off
+    # to the upstream init — avoids the mistralai dep resolver failure.
+    entrypoint: ["/hermes-config/webui-init.sh"]
+    ports:
+      - "8787:8787"      # Hermes WebUI
+    volumes:
+      - hermes-home:/home/hermeswebui/.hermes               # shared with agent
+      - hermes-agent-src:/opt/hermes                        # agent source for AIAgent import (rw — pip writes egg-info during install)
+      - ./hermes-config:/hermes-config:ro                   # init wrapper
+      - ./out:/workspace:ro                                 # CAD output files
+    environment:
+      HERMES_WEBUI_HOST: 0.0.0.0
+      HERMES_WEBUI_PORT: 8787
+      HERMES_WEBUI_STATE_DIR: /home/hermeswebui/.hermes/webui
+      HERMES_WEBUI_DEFAULT_WORKSPACE: /workspace
+      HERMES_WEBUI_PASSWORD: ${HERMES_WEBUI_PASSWORD:-}
+      HERMES_WEBUI_AGENT_DIR: /opt/hermes
+      WANTED_UID: ${UID:-1000}
+      WANTED_GID: ${GID:-1000}
+    depends_on:
+      - hermes-agent
+    restart: unless-stopped
+
+volumes:
+  hermes-home:        # Hermes Agent state: config, sessions, memories, skills
+  hermes-agent-src:   # Hermes Agent source — initialised from image on first boot

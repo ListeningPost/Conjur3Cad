@@ -1,0 +1,150 @@
+rules_version = '2';
+
+// Conjur3 Firestore security rules.
+//
+// Security model: all privileged mutations (claiming/rotating keys, invites,
+// roles, seats, subscriptions) happen in Cloud Functions via the Admin SDK,
+// which BYPASSES these rules. The client gets read access to what it
+// legitimately needs and no direct writes to trust-sensitive collections.
+//
+// Membership (multi-org) is the source of truth — a user belongs to an org iff
+// organizations/{orgId}/members/{uid} exists. Custom claims are NOT used.
+// Key documents never contain plaintext codes (only hash + prefix/last4), so
+// even readable key docs reveal no secrets.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function inOrg(orgId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid));
+    }
+
+    function isOrgAdmin(orgId) {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // Platform super-admins (verified allowlisted email). They may read across
+    // all orgs; mutations still go through Cloud Functions. The allowlist is
+    // config/platform.admins, mirrored by Cloud Functions from their
+    // PLATFORM_ADMIN_EMAILS env (functions/src/lib/platform.ts).
+    function isPlatformAdmin() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/config/platform)
+        && request.auth.token.email in get(/databases/$(database)/documents/config/platform).data.admins;
+    }
+
+    // ---- users: a user may read/update only their own profile doc.
+    // Trust-sensitive data lives in org subcollections, written by Cloud
+    // Functions; clients may only touch presentational fields here.
+    match /users/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow create: if isSignedIn() && request.auth.uid == uid
+                    && !("role" in request.resource.data)
+                    && !("orgId" in request.resource.data);
+      allow update: if isSignedIn() && request.auth.uid == uid
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(["displayName", "photoURL", "updatedAt"]);
+      allow delete: if false;
+    }
+
+    // ---- memberships, discoverable by their owner across ALL orgs.
+    // Powers the client's "which orgs am I in?" collection-group query.
+    match /{path=**}/members/{memberUid} {
+      allow read: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // ---- organizations: readable by members; never client-writable.
+    match /organizations/{orgId} {
+      // Members read their org; platform admins read (and list) any org.
+      allow read: if inOrg(orgId) || isPlatformAdmin();
+      allow write: if false;
+
+      match /members/{memberUid} {
+        allow read: if inOrg(orgId) || isPlatformAdmin();
+        allow write: if false;
+      }
+
+      // API keys — metadata only (hash + prefix/last4 + status; plaintext is
+      // never stored). A member reads their own key; admins read all of the
+      // org's keys. Mint/rotate/revoke happen exclusively via Cloud Functions.
+      match /keys/{keyId} {
+        allow read: if isOrgAdmin(orgId)
+                    || isPlatformAdmin()
+                    || (isSignedIn() && resource.data.ownerUid == request.auth.uid);
+        allow write: if false;
+      }
+    }
+
+    // ---- Stripe extension collections (stripe/firestore-stripe-payments).
+    // The extension itself uses the Admin SDK; clients read their own billing
+    // data and create checkout sessions under their own customer doc.
+    match /customers/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+
+      match /checkout_sessions/{id} {
+        allow read, write: if isSignedIn() && request.auth.uid == uid;
+      }
+      match /subscriptions/{id} {
+        allow read: if isSignedIn() && request.auth.uid == uid;
+      }
+      match /payments/{id} {
+        allow read: if isSignedIn() && request.auth.uid == uid;
+      }
+    }
+
+    // Product/price catalog published by the Stripe extension is public-read.
+    match /products/{id} {
+      allow read: if true;
+      match /prices/{priceId} {
+        allow read: if true;
+      }
+      match /{document=**} {
+        allow read: if true;
+      }
+    }
+
+    // ---- guided sign-up invites (seat vouchers). Created/redeemed exclusively
+    // via Cloud Functions (validity is checked through the getGuidedInvite
+    // callable, so the docs themselves stay private). Platform admins read for
+    // management.
+    match /guidedInvites/{id} {
+      allow read: if isPlatformAdmin();
+      allow write: if false;
+      match /redemptions/{uid} {
+        allow read: if isPlatformAdmin();
+        allow write: if false;
+      }
+    }
+
+    // ---- org join invites. Validity goes through the getOrgInvite callable;
+    // admins of the org list/manage their own invites (the client must query
+    // with where("orgId", "==", …)).
+    match /orgInvites/{token} {
+      allow read: if isPlatformAdmin() || isOrgAdmin(resource.data.orgId);
+      allow write: if false;
+      match /redemptions/{uid} {
+        allow read: if isPlatformAdmin();
+        allow write: if false;
+      }
+    }
+
+    // Public runtime feature flags (e.g. stripeEnabled). Read-only to clients;
+    // written only by Cloud Functions / console.
+    // config/platform holds the platform-admin allowlist and is not public.
+    match /config/{doc} {
+      allow read: if doc != "platform" || isPlatformAdmin();
+      allow write: if false;
+    }
+
+    // Default deny.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

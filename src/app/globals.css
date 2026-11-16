@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------------- */
+/* Conjur3 design system. Tokens mirror conjur3.com: a dark "ink" canvas with */
+/* mint/amber accents, stencil display type, and a mono technical wordmark.   */
+/* ------------------------------------------------------------------------- */
+@theme {
+  /* Surfaces & text */
+  --color-ink: #05111b;
+  --color-ink-2: #0a1a24;
+  --color-ink-3: #102330;
+  --color-paper: #f1f7fd;
+
+  /* Accents */
+  --color-mint: #00ff8f;
+  --color-mint-soft: #6df88d;
+  --color-amber: #fe8f01;
+  --color-aqua: #73e9d8;
+
+  /* Type families (the var(--font-*) values are injected by next/font) */
+  --font-body: var(--font-inter-tight), "Inter Tight", system-ui, sans-serif;
+  --font-display: var(--font-saira), "Saira Stencil One", ui-sans-serif,
+    system-ui, sans-serif;
+  --font-wordmark: var(--font-share-tech), "Share Tech Mono", ui-monospace,
+    monospace;
+  --font-mono: var(--font-jetbrains), "JetBrains Mono", ui-monospace, monospace;
+
+  /* Radii */
+  --radius-tile: 8px;
+  --radius-card: 16px;
+  --radius-chip: 999px;
+}
+
+:root {
+  --lp-gradient: linear-gradient(
+    135deg,
+    var(--color-mint) 0%,
+    var(--color-amber) 100%
+  );
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Stencil display headings, uppercase + tracked out, per the brand. */
+.display {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 0.95;
+}
+
+/* CONJUR3 wordmark */
+.wordmark {
+  font-family: var(--font-wordmark);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Eyebrow / kicker labels */
+.kicker {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  color: var(--color-aqua);
+}
+
+.text-gradient {
+  background: var(--lp-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Subtle starfield / engineering-grid backdrop used on the hero. */
+.bg-grid {
+  background-image:
+    radial-gradient(rgba(115, 233, 216, 0.08) 1px, transparent 1px),
+    radial-gradient(rgba(0, 255, 143, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px, 88px 88px;
+  background-position: 0 0, 22px 22px;
+}
+
+::selection {
+  background: var(--color-mint);
+  color: var(--color-ink);
+}
+
+/* Inputs inherit the dark theme by default. */
+input,
+select,
+textarea {
+  color-scheme: dark;
+}

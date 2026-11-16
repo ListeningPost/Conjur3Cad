@@ -1,0 +1,30 @@
+# systemd unit for the Conjur3 MCP gateway on a GCP Compute Engine VM.
+#   sudo cp deploy/conjur3-mcp-gateway.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now conjur3-mcp-gateway
+#
+# Credentials: attach a service account to the VM (roles: Datastore User /
+# Firebase Auth Viewer). Application Default Credentials are used automatically
+# — no key file needed. Set NODE_ENV=production and a real FIREBASE_PROJECT_ID
+# (and unset FIRESTORE_EMULATOR_HOST) in the EnvironmentFile.
+[Unit]
+Description=Conjur3 MCP Gateway
+After=network-online.target redis-server.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=conjur3
+WorkingDirectory=/opt/conjur3-mcp-gateway
+EnvironmentFile=/opt/conjur3-mcp-gateway/.env
+ExecStart=/usr/bin/node dist/index.js
+Restart=always
+RestartSec=3
+# hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/conjur3-mcp-gateway
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 170" width="900" height="170" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-labelledby="t3 d3">
+<title id="t3">Conjur3 on CADGenBench</title>
+<desc id="d3">0.595 CAD Score on CADGenBench (81 tasks, private ground truth) · Top 9% Submitted 14 Nov: rank 81 of 926 (16 Nov: top 13%, rank 128 of 1,001) · 63 days it would have led the leaderboard (5 Jun – 6 Aug 2026)</desc>
+<rect width="900" height="170" rx="12" fill="#fcfcfb"/>
+<rect x="24.0" y="24" width="273.3" height="122" rx="10" fill="none" stroke="#e4e3df" stroke-width="1.5"/>
+<rect x="24.0" y="24" width="4" height="122" rx="2" fill="#eb6834"/>
+<text x="48.0" y="78" font-size="34" font-weight="800" fill="#0b0b0b">0.595</text>
+<text x="48.0" y="104" font-size="13.5" fill="#52514e">CAD Score on CADGenBench</text>
+<text x="48.0" y="124" font-size="12" fill="#6f6e69">81 tasks, private ground truth</text>
+<rect x="313.3" y="24" width="273.3" height="122" rx="10" fill="none" stroke="#e4e3df" stroke-width="1.5"/>
+<rect x="313.3" y="24" width="4" height="122" rx="2" fill="#2a78d6"/>
+<text x="337.3" y="78" font-size="34" font-weight="800" fill="#0b0b0b">Top 9%</text>
+<text x="337.3" y="104" font-size="13.5" fill="#52514e">Submitted 14 Nov: rank 81 of 926</text>
+<text x="337.3" y="124" font-size="12" fill="#6f6e69">16 Nov: top 13%, rank 128 of 1,001</text>
+<rect x="602.7" y="24" width="273.3" height="122" rx="10" fill="none" stroke="#e4e3df" stroke-width="1.5"/>
+<rect x="602.7" y="24" width="4" height="122" rx="2" fill="#2a78d6"/>
+<text x="626.7" y="78" font-size="34" font-weight="800" fill="#0b0b0b">63 days</text>
+<text x="626.7" y="104" font-size="13.5" fill="#52514e">it would have led the leaderboard</text>
+<text x="626.7" y="124" font-size="12" fill="#6f6e69">5 Jun – 6 Aug 2026</text>
+</svg>

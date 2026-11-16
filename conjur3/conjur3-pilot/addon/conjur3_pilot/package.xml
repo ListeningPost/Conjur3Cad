@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="https://wiki.freecad.org/Package_Metadata" format="1">
+  <name>Conjur3</name>
+  <description>Live parametric CAD harness. Runs an in-process RPC server so an external MCP client (Claude Code) can drive the running FreeCAD GUI in real time — every edit updates the 3D viewport on the next recompute.</description>
+  <version>0.1.0</version>
+  <maintainer email="ops@conjur3.com">Conjur3 contributors</maintainer>
+  <license>MIT</license>
+  <url type="repository" branch="main">https://github.com/ListeningPost/Conjur3Cad</url>
+  <content>
+    <workbench classname="Conjur3Workbench">
+      <description>Starts the Conjur3 RPC server on :9875 and exposes 30+ curated tool handlers (sketches, pad/pocket/revolve, fillets, booleans, patterns, variable sets, exports) for external LLM-driven modeling.</description>
+    </workbench>
+  </content>
+  <dependencies>
+    <pythonmin version="3.10" />
+    <freecadmin version="1.0" />
+  </dependencies>
+</package>

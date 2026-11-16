@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Test caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# uv
+uv.lock
+
+# IDE
+.vscode/
+.idea/
+
+# CAD artifacts (user content, not source)
+*.FCStd
+*.FCBak
+*.step
+*.stp
+*.stl
+*.iges
+*.igs
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets — local-only env file with API keys and auth tokens.
+# Keep .env.example tracked as the template; .env must NEVER be committed.
+.env

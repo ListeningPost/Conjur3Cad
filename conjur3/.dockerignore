@@ -1,0 +1,16 @@
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.venv
+**/.git
+**/.mypy_cache
+**/out/
+**/outputs.zip
+**/uv.lock
+**/*.FCStd
+**/*.FCBak
+**/*.step
+**/*.stl
+**/*.zip
+**/*.png
+*.log

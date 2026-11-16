@@ -1,0 +1,33 @@
+{
+  "name": "conjur3-connector",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ListeningPost/Conjur3Cad.git"
+  },
+  "description": "Tiny local connector: bridges the hosted Conjur3 MCP to this machine's FreeCAD. Dials out — no inbound ports, no IP in it.",
+  "type": "commonjs",
+  "bin": {
+    "conjur3-connector": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "bundle": "esbuild src/index.ts --bundle --platform=node --target=node20 --minify --outfile=dist/conjur3-connector.js",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "ws": "^8.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

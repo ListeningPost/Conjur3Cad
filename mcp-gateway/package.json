@@ -1,0 +1,37 @@
+{
+  "name": "conjur3-mcp-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ListeningPost/Conjur3Cad.git"
+  },
+  "description": "Authenticated, single-session reverse proxy in front of the Conjur3 (conjur3-pilot) MCP. Seat-key DRM for the premium MCP.",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch --env-file=.env src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "firebase-admin": "^12.7.0",
+    "http-proxy-middleware": "^3.0.3",
+    "ioredis": "^5.4.1",
+    "undici": "^6.26.0",
+    "ws": "^8.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
